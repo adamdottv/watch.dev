@@ -7,11 +7,12 @@
     "typecheck": "tsc -noEmit"
   },
   "devDependencies": {
-    "@types/node": "^18.15.3",
     "@types/aws-lambda": "^8.10.113",
+    "@types/node": "^18.15.3",
     "sst": "^2.1.31"
   },
   "dependencies": {
+    "discord.js": "^14.8.0",
     "sst": "^2.1.31"
   }
 }

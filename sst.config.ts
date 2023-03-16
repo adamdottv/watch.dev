@@ -1,4 +1,5 @@
 import { SSTConfig } from "sst";
+import { Config, Cron } from "sst/constructs";
 import { API } from "./stacks/MyStack";
 
 export default {
@@ -9,6 +10,20 @@ export default {
     };
   },
   stacks(app) {
-    app.stack(API);
-  }
+    app.stack(function Default(ctx) {
+      const DISCORD_TOKEN = new Config.Secret(ctx.stack, "DISCORD_TOKEN");
+      new Cron(ctx.stack, "roleSync", {
+        job: {
+          function: {
+            handler: "packages/functions/src/role-sync.handler",
+            runtime: "nodejs16.x",
+            bind: [DISCORD_TOKEN],
+          },
+        },
+        schedule: "rate(1 minute)",
+      });
+    });
+  },
 } satisfies SSTConfig;
+
+// hardcoded const minutes in a day
