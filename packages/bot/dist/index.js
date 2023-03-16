@@ -5,7 +5,9 @@ const client_secrets_manager_1 = require("@aws-sdk/client-secrets-manager");
 const subscriberRoleId = "1085544076541177917";
 (async () => {
     const secretArn = process.env.DISCORD_SECRET_ARN;
-    const secretsManagerClient = new client_secrets_manager_1.SecretsManagerClient({});
+    const secretsManagerClient = new client_secrets_manager_1.SecretsManagerClient({
+        region: "us-east-1",
+    });
     const getSecretValueCommand = new client_secrets_manager_1.GetSecretValueCommand({
         SecretId: secretArn,
     });

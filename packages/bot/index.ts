@@ -10,7 +10,9 @@ const subscriberRoleId = "1085544076541177917";
 (async () => {
   const secretArn = process.env.DISCORD_SECRET_ARN;
 
-  const secretsManagerClient = new SecretsManagerClient({});
+  const secretsManagerClient = new SecretsManagerClient({
+    region: "us-east-1",
+  });
   const getSecretValueCommand = new GetSecretValueCommand({
     SecretId: secretArn,
   });
