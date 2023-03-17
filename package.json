@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "sst dev",
-    "build": "cd ./packages/bot && pnpm build && cd ../../ && sst build",
-    "deploy": "cd ./packages/bot && pnpm build && cd ../../ && sst deploy",
+    "build": "sst build",
+    "deploy": "sst deploy",
     "remove": "sst remove",
     "console": "sst console",
     "typecheck": "tsc --noEmit"

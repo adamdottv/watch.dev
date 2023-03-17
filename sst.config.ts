@@ -1,6 +1,5 @@
 import { SSTConfig } from "sst";
 import { Config, Cron } from "sst/constructs";
-import { API } from "./stacks/MyStack";
 
 export default {
   config(_input) {
