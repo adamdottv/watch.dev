@@ -1,44 +1,47 @@
+import { REST, Routes } from "discord.js";
 import { Config } from "sst/node/config";
-import { Client, GuildMember } from "discord.js";
 
-const subscriberRoleId = "1085544076541177917";
+const GUILD_ID = "898508425997217795";
+const ROLE_ID = "1085544076541177917";
+
+const rest = new REST({ version: "10" }).setToken(Config.DISCORD_TOKEN);
+
+export async function* members() {
+  let after: string | undefined = undefined;
+  while (true) {
+    const params = new URLSearchParams({
+      limit: "1000",
+    });
+    if (after) params.set("after", after);
+    const members = (await rest.get(Routes.guildMembers(GUILD_ID), {
+      query: params,
+    })) as any[];
+    if (members.length === 0) return;
+    yield* members;
+    after = members[members.length - 1].user.id;
+  }
+}
 
 export async function handler() {
-  return new Promise<void>((resolve) => {
-    const client = new Client({ intents: ["Guilds", "GuildMembers"] });
-
-    const updateMemberRoles = async (member: GuildMember) => {
-      const subscribesToAnyone = member.roles.cache.find((role) =>
-        role.name.startsWith("subscriber (")
+  const roles = await rest
+    .get(Routes.guildRoles(GUILD_ID))
+    .then((roles) =>
+      Object.fromEntries((roles as any[]).map((r) => [r.id, r.name]))
+    );
+  for await (const member of members()) {
+    const subscribesToAnyone = member.roles.some((role: string) =>
+      roles[role].startsWith("subscriber (")
+    );
+    const hasSubscriberRole = member.roles.includes(ROLE_ID);
+    if (!subscribesToAnyone && hasSubscriberRole) {
+      console.log("Removing role from", member.user.username);
+      await rest.delete(
+        Routes.guildMemberRole(GUILD_ID, member.user.id, ROLE_ID)
       );
-      if (subscribesToAnyone && !member.roles.cache.has(subscriberRoleId)) {
-        console.log("Adding role to", member.user.tag);
-        await member.roles.add(subscriberRoleId);
-      }
-      if (!subscribesToAnyone && member.roles.cache.has(subscriberRoleId)) {
-        console.log("Removing role from", member.user.tag);
-        await member.roles.remove(subscriberRoleId);
-      }
-    };
-
-    client.once("ready", async () => {
-      console.log(`Logged in as ${client.user?.tag}!`);
-
-      const guild = await client.guilds.fetch("898508425997217795");
-
-      try {
-        // Fetch all members from the server
-        const members = await guild.members.fetch();
-        console.log(`There are ${members.size} members in the server.`);
-
-        await Promise.all(members.map(updateMemberRoles));
-      } catch (error) {
-        console.error("Error fetching members:", error);
-      }
-
-      resolve();
-    });
-
-    client.login(Config.DISCORD_TOKEN);
-  });
+    }
+    if (subscribesToAnyone && !hasSubscriberRole) {
+      console.log("Adding role to", member.user.username);
+      await rest.put(Routes.guildMemberRole(GUILD_ID, member.user.id, ROLE_ID));
+    }
+  }
 }
